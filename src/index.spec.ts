@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Test the temporal library functionality
 describe('@agape/temporal', () => {
   // Store original globalThis.Temporal
@@ -273,7 +274,7 @@ describe('@agape/temporal', () => {
       if (hasTemporal()) {
         throw new Error('Expected Temporal to not be available');
       } else {
-        console.warn('Temporal is not available — falling back to Date.');
+        // console.warn('Temporal is not available — falling back to Date.');
         // In a real scenario, you would use Date here
         const fallbackDate = new Date();
         expect(fallbackDate).toBeInstanceOf(Date);
