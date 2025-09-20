@@ -52,7 +52,7 @@ export function hasTemporal(): boolean {
  * Gets the Temporal object synchronously from the current environment.
  * 
  * This function returns the native Temporal object if available, or a polyfilled
- * version if `@js-temporal/polyfill` is installed. If neither is available, it
+ * version if one is installed and configured. If neither is available, it
  * returns a typed stub that throws descriptive errors when accessed.
  * 
  * The result is cached for performance, so subsequent calls return the same instance.
@@ -61,8 +61,24 @@ export function hasTemporal(): boolean {
  * @returns The Temporal object (native, polyfill, or typed stub)
  * 
  * @example
+ * ### Get the Temporal object
  * ```typescript
  * import { getTemporal } from '@agape/temporal';
+ * 
+ * const Temporal = getTemporal();
+ * const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
+ * console.log(now.toString()); // "2025-09-19T10:00:00"
+ * ```
+ * 
+ * @example
+ * 
+ * # Configure a polyfill
+ * 
+ * ```typescript
+ * import { Temporal as TemporalPolyfill } from '@js-temporal/polyfill';
+ * 
+ * // Set globalThis.Temporal to make it available to getTemporal()
+ * (globalThis as any).Temporal = TemporalPolyfill;
  * 
  * const Temporal = getTemporal();
  * const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
