@@ -1,4 +1,4 @@
-name: Validate @agape/metadata
+name: Validate @agape/temporal
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ jobs:
       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
     steps:
-      - name: Checkout agape-metadata (this repo)
+      - name: Checkout agape-temporal (this repo)
         uses: actions/checkout@v4
 
       - name: Extract branch name
@@ -41,7 +41,7 @@ jobs:
           # Now handle submodules
           git submodule foreach --quiet --recursive '
             echo "🔍 Checking submodule: $name"
-            if [ "$name" = "libs/metadata" ]; then
+            if [ "$name" = "libs/temporal" ]; then
               echo "⚠️ Skipping $name (current module)"
               exit 0
             fi
@@ -58,8 +58,8 @@ jobs:
 
       - name: Replace library code in monorepo
         run: |
-          rm -rf ../AgapeToolkit/libs/metadata
-          cp -r . ../AgapeToolkit/libs/metadata
+          rm -rf ../AgapeToolkit/libs/temporal
+          cp -r . ../AgapeToolkit/libs/temporal
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -70,10 +70,10 @@ jobs:
         working-directory: ../AgapeToolkit
         run: npm ci
 
-      - name: Run lint for @agape/metadata
+      - name: Run lint for @agape/temporal
         working-directory: ../AgapeToolkit
-        run: npx nx lint metadata
+        run: npx nx lint temporal
 
-      - name: Run tests for @agape/metadata
+      - name: Run tests for @agape/temporal
         working-directory: ../AgapeToolkit
-        run: npx nx test metadata --no-watch --ci
+        run: npx nx test temporal --no-watch --ci
