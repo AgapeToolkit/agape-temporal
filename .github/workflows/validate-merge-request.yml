@@ -1,0 +1,79 @@
+name: Validate @agape/metadata
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    env:
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout agape-metadata (this repo)
+        uses: actions/checkout@v4
+
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "branch=${GITHUB_HEAD_REF}" >> $GITHUB_OUTPUT
+
+      - name: Configure Git to use PAT for submodules
+        run: |
+          git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "git@github.com:"
+
+      - name: Clone AgapeToolkit monorepo (with submodules)
+        run: |
+          git clone --recurse-submodules git@github.com:AgapeToolkit/AgapeToolkit.git ../AgapeToolkit
+          cd ../AgapeToolkit
+
+          # Try to switch top-level AgapeToolkit repo to matching branch
+          echo "🔍 Checking if top-level repo has branch: ${{ steps.extract_branch.outputs.branch }}"
+          git fetch origin
+          if git rev-parse --verify origin/${{ steps.extract_branch.outputs.branch }} >/dev/null 2>&1; then
+            echo "✅ Switching top-level repo to branch ${{ steps.extract_branch.outputs.branch }}"
+            git checkout ${{ steps.extract_branch.outputs.branch }}
+            git pull origin ${{ steps.extract_branch.outputs.branch }}
+          else
+            echo "🛑 No matching branch in top-level repo — leaving default"
+          fi
+
+          # Now handle submodules
+          git submodule foreach --quiet --recursive '
+            echo "🔍 Checking submodule: $name"
+            if [ "$name" = "libs/metadata" ]; then
+              echo "⚠️ Skipping $name (current module)"
+              exit 0
+            fi
+            cd "$toplevel/$name"
+            git fetch origin
+            if git rev-parse --verify origin/${{ steps.extract_branch.outputs.branch }} >/dev/null 2>&1; then
+              echo "✅ Switching $name to branch ${{ steps.extract_branch.outputs.branch }}"
+              git checkout ${{ steps.extract_branch.outputs.branch }}
+              git pull origin ${{ steps.extract_branch.outputs.branch }}
+            else
+              echo "🛑 No matching branch in $name — leaving on default"
+            fi
+          '
+
+      - name: Replace library code in monorepo
+        run: |
+          rm -rf ../AgapeToolkit/libs/metadata
+          cp -r . ../AgapeToolkit/libs/metadata
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install monorepo dependencies
+        working-directory: ../AgapeToolkit
+        run: npm ci
+
+      - name: Run lint for @agape/metadata
+        working-directory: ../AgapeToolkit
+        run: npx nx lint metadata
+
+      - name: Run tests for @agape/metadata
+        working-directory: ../AgapeToolkit
+        run: npx nx test metadata --no-watch --ci

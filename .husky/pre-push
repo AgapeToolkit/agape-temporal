@@ -1,0 +1,2 @@
+npx nx lint temporal
+npx nx test temporal --no-watch --ci
