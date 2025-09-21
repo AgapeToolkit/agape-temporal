@@ -1,7 +1,7 @@
 {
   "name": "@agape/temporal",
-  "version": "0.1.0",
-  "description": "Typed, dependency-free access to Temporal with fallback stub",
+  "version": "0.2.0",
+  "description": "Temporal namespace",
   "main": "./cjs/index.js",
   "module": "./es2020/index.js",
   "author": {

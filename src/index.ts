@@ -1,3 +1,44 @@
+/**
+ * @agape/temporal
+ * 
+ * A Temporal namespace that provides typed access to Temporal with agape-level configuration
+ * and intelligent fallback stubs. This library allows you to use Temporal in environments
+ * with or without native Temporal support, with full control over which implementation to use.
+ * 
+ * ## Features
+ * 
+ * - **Temporal Namespace**: Direct access to `Temporal.PlainDateTime`, `Temporal.PlainDate`, etc.
+ * - **Agape Configuration**: Set your preferred Temporal implementation with `setTemporal()`
+ * - **Intelligent Fallback**: Automatically uses globalThis Temporal or provides helpful stub errors
+ * - **Type Safety**: Full TypeScript support with proper type definitions
+ * - **Zero Dependencies**: No runtime dependencies, works in any environment
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * import { Temporal, hasTemporal, setTemporal } from '@agape/temporal';
+ * 
+ * // Basic usage
+ * if (hasTemporal()) {
+ *   const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
+ *   console.log(now.toString());
+ * }
+ * 
+ * // With polyfill
+ * import { Temporal as TemporalPolyfill } from '@js-temporal/polyfill';
+ * setTemporal(TemporalPolyfill);
+ * const date = Temporal.PlainDate.from('2025-09-19');
+ * ```
+ * 
+ * ## Configuration Priority
+ * 
+ * 1. **Agape Temporal** - Set via `setTemporal()`
+ * 2. **GlobalThis Temporal** - Available on `globalThis.Temporal`
+ * 3. **Stub Implementation** - Throws helpful errors when accessed
+ * 
+ * @packageDocumentation
+ */
+
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -77,14 +118,31 @@ class TimeZoneStub {
 }
 
 /**
- * This stub makes it trivial for libraries that wish to extend @agape/model
- * functionality to optionally support Temporal. Use the stub in place of T
- * Temporal in your library, if Temporal is available either natively or as a
- * polyfill the stub will point to the implementation, otherwise it will point
- * to a noop implementation that throws an error if instantiated.
- *
- * You can check if the user has Temporal before using the stub to avoid errors
- * using the {@link hasTemporal} function.
+ * The Temporal namespace provides typed access to Temporal classes with intelligent fallback.
+ * 
+ * This namespace automatically detects and uses the best available Temporal implementation:
+ * 1. Agape-level temporal (set via `setTemporal()`)
+ * 2. GlobalThis temporal (native or polyfill)
+ * 3. Stub implementation (throws helpful errors)
+ * 
+ * All Temporal classes are available as properties on this namespace:
+ * - `Temporal.PlainDateTime` - Date and time without timezone
+ * - `Temporal.PlainDate` - Date without time or timezone  
+ * - `Temporal.PlainTime` - Time without date or timezone
+ * - `Temporal.ZonedDateTime` - Date and time with timezone
+ * - `Temporal.Instant` - Single point in time
+ * - `Temporal.Duration` - Length of time
+ * - `Temporal.TimeZone` - Timezone representation
+ * 
+ * @example
+ * ```typescript
+ * import { Temporal, hasTemporal } from '@agape/temporal';
+ * 
+ * if (hasTemporal()) {
+ *   const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
+ *   console.log(now.toString());
+ * }
+ * ```
  */
 export namespace Temporal {
   /**
@@ -171,23 +229,37 @@ export namespace Temporal {
 
 
 /**
- * Sets the Temporal library to be used by Agape.
+ * Sets the Temporal implementation to be used by the Agape Temporal namespace.
  *
- * This function allows you to explicitly set which Temporal implementation
- * should be used by the Agape Temporal namespace. This takes precedence over
- * any Temporal found on globalThis.
+ * This function allows you to explicitly configure which Temporal implementation
+ * should be used. The provided temporal takes precedence over any Temporal found
+ * on globalThis, giving you full control over the Temporal implementation used
+ * throughout your application.
  *
- * @param temporal - The Temporal implementation to use
+ * @param temporal - The Temporal implementation to use (e.g., from `@js-temporal/polyfill`)
  *
  * @example
  * ```typescript
- * import { setTemporal } from '@agape/temporal';
+ * import { setTemporal, Temporal } from '@agape/temporal';
  * import { Temporal as TemporalPolyfill } from '@js-temporal/polyfill';
  *
- * // Set a specific polyfill
+ * // Set your preferred polyfill
  * setTemporal(TemporalPolyfill);
  *
- * // Now the Temporal namespace will use this specific implementation
+ * // Now all Temporal namespace usage will use this implementation
+ * const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
+ * console.log(now.toString()); // Uses your polyfill
+ * ```
+ *
+ * @example
+ * ```typescript
+ * import { setTemporal, Temporal } from '@agape/temporal';
+ * import { Temporal as CustomTemporal } from './my-custom-temporal';
+ *
+ * // Use a custom Temporal implementation
+ * setTemporal(CustomTemporal);
+ * 
+ * const date = Temporal.PlainDate.from('2025-09-19');
  * ```
  */
 export function setTemporal(temporal: typeof TemporalPolyfill): void {
@@ -229,18 +301,17 @@ function updateTemporalNamespace(): void {
 /**
  * Checks if Temporal is available in the current environment.
  *
- * This function first checks if an agape-level temporal has been set via setTemporal(),
- * then checks for both native Temporal (Node.js 20+, modern browsers) and
- * polyfilled Temporal (when `@js-temporal/polyfill` is installed and configured).
+ * This function checks for Temporal implementations in the following priority order:
+ * 1. Agape-level temporal (set via `setTemporal()`)
+ * 2. GlobalThis temporal (native or polyfill)
  *
  * @returns `true` if Temporal is available, `false` otherwise
  *
  * @example
  * ```typescript
- * import { hasTemporal, getTemporal } from '@agape/temporal';
+ * import { hasTemporal, Temporal } from '@agape/temporal';
  *
  * if (hasTemporal()) {
- *   const Temporal = getTemporal();
  *   const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
  *   console.log(now.toString());
  * } else {
