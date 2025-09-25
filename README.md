@@ -1,12 +1,11 @@
 # @agape/temporal
 
-Temporal namespace
+Access the Temporal namespace safely, even in environments where it's not natively available.
 
-Access the Temporal namespace even when Temporal isn't installed on the system.
-This allows you to program with Temporal objects, and hide them behind a check to
-see if Temporal is available before calling them. If Temporal is not installed on the
-system the objects will be replaced with no-op objects that produce errors when used.
-
+@agape/temporal provides a drop-in mechanism for working with Temporal objects 
+without requiring the native Temporal API to be installed. If Temporal is 
+unavailable, this library provides stub implementations that raise clear runtime
+errors, allowing your code to fail gracefully or fall back to alternatives.
 
 ## 🚀 Get Started
 

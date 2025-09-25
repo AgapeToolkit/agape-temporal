@@ -1,44 +1,3 @@
-/**
- * @agape/temporal
- * 
- * A Temporal namespace that provides typed access to Temporal with agape-level configuration
- * and intelligent fallback stubs. This library allows you to use Temporal in environments
- * with or without native Temporal support, with full control over which implementation to use.
- * 
- * ## Features
- * 
- * - **Temporal Namespace**: Direct access to `Temporal.PlainDateTime`, `Temporal.PlainDate`, etc.
- * - **Agape Configuration**: Set your preferred Temporal implementation with `setTemporal()`
- * - **Intelligent Fallback**: Automatically uses globalThis Temporal or provides helpful stub errors
- * - **Type Safety**: Full TypeScript support with proper type definitions
- * - **Zero Dependencies**: No runtime dependencies, works in any environment
- * 
- * ## Usage
- * 
- * ```typescript
- * import { Temporal, hasTemporal, setTemporal } from '@agape/temporal';
- * 
- * // Basic usage
- * if (hasTemporal()) {
- *   const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
- *   console.log(now.toString());
- * }
- * 
- * // With polyfill
- * import { Temporal as TemporalPolyfill } from '@js-temporal/polyfill';
- * setTemporal(TemporalPolyfill);
- * const date = Temporal.PlainDate.from('2025-09-19');
- * ```
- * 
- * ## Configuration Priority
- * 
- * 1. **Agape Temporal** - Set via `setTemporal()`
- * 2. **GlobalThis Temporal** - Available on `globalThis.Temporal`
- * 3. **Stub Implementation** - Throws helpful errors when accessed
- * 
- * @packageDocumentation
- */
-
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -119,25 +78,25 @@ class TimeZoneStub {
 
 /**
  * The Temporal namespace provides typed access to Temporal classes with intelligent fallback.
- * 
+ *
  * This namespace automatically detects and uses the best available Temporal implementation:
  * 1. Agape-level temporal (set via `setTemporal()`)
  * 2. GlobalThis temporal (native or polyfill)
  * 3. Stub implementation (throws helpful errors)
- * 
+ *
  * All Temporal classes are available as properties on this namespace:
  * - `Temporal.PlainDateTime` - Date and time without timezone
- * - `Temporal.PlainDate` - Date without time or timezone  
+ * - `Temporal.PlainDate` - Date without time or timezone
  * - `Temporal.PlainTime` - Time without date or timezone
  * - `Temporal.ZonedDateTime` - Date and time with timezone
  * - `Temporal.Instant` - Single point in time
  * - `Temporal.Duration` - Length of time
  * - `Temporal.TimeZone` - Timezone representation
- * 
+ *
  * @example
  * ```typescript
  * import { Temporal, hasTemporal } from '@agape/temporal';
- * 
+ *
  * if (hasTemporal()) {
  *   const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
  *   console.log(now.toString());
@@ -147,7 +106,17 @@ class TimeZoneStub {
 export namespace Temporal {
   /**
    * `Temporal.Instant` constructor or noop implementation.
+   * 
+   * Represents a single point in time, independent of timezone.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/instant.html | The Temporal.Instant documentation}
+   *
+   * @example
+   * ```typescript
+   * const now = Temporal.Instant.from('2025-09-19T14:30:00Z');
+   * const epoch = Temporal.Instant.fromEpochSeconds(0);
+   * console.log(now.toString()); // "2025-09-19T14:30:00Z"
+   * ```
    */
   export const Instant: typeof TemporalPolyfill.Instant = getTemporalInstance()?.Instant ?? InstantStub as any
 
@@ -156,7 +125,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.ZonedDateTime` constructor or noop implementation.
+   * 
+   * Represents a date and time with timezone information.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/zoneddatetime.html  | The Temporal.ZonedDateTime documentation}
+   *
+   * @example
+   * ```typescript
+   * const nyTime = Temporal.ZonedDateTime.from('2025-09-19T14:30:00[America/New_York]');
+   * const utcTime = nyTime.withTimeZone('UTC');
+   * console.log(nyTime.toString()); // "2025-09-19T14:30:00-04:00[America/New_York]"
+   * ```
    */
   export const ZonedDateTime: typeof TemporalPolyfill.ZonedDateTime = getTemporalInstance()?.ZonedDateTime ?? ZonedDateTimeStub as any
 
@@ -165,7 +144,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.PlainDate` constructor or noop implementation.
+   * 
+   * Represents a calendar date without time or timezone.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/plaindate.html  | The Temporal.PlainDate documentation}
+   *
+   * @example
+   * ```typescript
+   * const date = Temporal.PlainDate.from('2025-09-19');
+   * const tomorrow = date.add({ days: 1 });
+   * console.log(tomorrow.toString()); // "2025-09-20"
+   * ```
    */
   export const PlainDate: typeof TemporalPolyfill.PlainDate = getTemporalInstance()?.PlainDate ?? PlainDateStub as any
 
@@ -174,7 +163,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.PlainTime` constructor or noop implementation.
+   * 
+   * Represents a time of day without date or timezone.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/plaintime.html | The Temporal.PlainTime documentation}
+   *
+   * @example
+   * ```typescript
+   * const time = Temporal.PlainTime.from('14:30:00');
+   * const later = time.add({ hours: 2 });
+   * console.log(later.toString()); // "16:30:00"
+   * ```
    */
   export const PlainTime: typeof TemporalPolyfill.PlainTime = getTemporalInstance()?.PlainTime ?? PlainTimeStub as any
 
@@ -183,7 +182,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.PlainDateTime` constructor or noop implementation.
+   * 
+   * Represents a date and time without timezone information.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/plaindatetime.html | The Temporal.PlainDateTime documentation}
+   *
+   * @example
+   * ```typescript
+   * const dt = Temporal.PlainDateTime.from('2025-09-19T14:30:00');
+   * const nextWeek = dt.add({ weeks: 1 });
+   * console.log(nextWeek.toString()); // "2025-09-26T14:30:00"
+   * ```
    */
   export const PlainDateTime: typeof TemporalPolyfill.PlainDateTime = getTemporalInstance()?.PlainDateTime ?? PlainDateTimeStub as any
 
@@ -192,7 +201,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.PlainYearMonth` constructor or noop implementation.
+   * 
+   * Represents a year and month without day information.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/plainyearmonth.html | The Temporal.PlainYearMonth documentation}
+   *
+   * @example
+   * ```typescript
+   * const ym = Temporal.PlainYearMonth.from('2025-09');
+   * const nextMonth = ym.add({ months: 1 });
+   * console.log(nextMonth.toString()); // "2025-10"
+   * ```
    */
   export const PlainYearMonth: typeof TemporalPolyfill.PlainYearMonth = getTemporalInstance()?.PlainYearMonth ?? PlainYearMonthStub as any
 
@@ -201,7 +220,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.PlainMonthDay` constructor or noop implementation.
+   * 
+   * Represents a month and day without year information.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/plainmonthday.html | The Temporal.PlainMonthDay documentation}
+   *
+   * @example
+   * ```typescript
+   * const md = Temporal.PlainMonthDay.from('09-19');
+   * const thisYear = md.toPlainDate({ year: 2025 });
+   * console.log(thisYear.toString()); // "2025-09-19"
+   * ```
    */
   export const PlainMonthDay: typeof TemporalPolyfill.PlainMonthDay = getTemporalInstance()?.PlainMonthDay ?? PlainMonthDayStub as any
 
@@ -210,7 +239,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.Duration` constructor or noop implementation.
+   * 
+   * Represents a length of time (duration).
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/duration.html | The Temporal.Duration documentation}
+   *
+   * @example
+   * ```typescript
+   * const duration = Temporal.Duration.from('PT2H30M');
+   * const doubled = duration.multiply(2);
+   * console.log(doubled.toString()); // "PT5H"
+   * ```
    */
   export const Duration: typeof TemporalPolyfill.Duration = getTemporalInstance()?.Duration ?? DurationStub as any
 
@@ -219,7 +258,17 @@ export namespace Temporal {
 
   /**
    * `Temporal.TimeZone` constructor or noop implementation.
+   * 
+   * Represents a timezone.
+   * 
    * @see {@link https://tc39.es/proposal-temporal/docs/timezone.html | The Temporal.TimeZone documentation}
+   *
+   * @example
+   * ```typescript
+   * const tz = Temporal.TimeZone.from('America/New_York');
+   * const offset = tz.getOffsetNanosecondsFor(Temporal.Instant.from('2025-09-19T14:30:00Z'));
+   * console.log(offset / 1_000_000_000 / 60); // -240 (minutes from UTC)
+   * ```
    */
   export const TimeZone: typeof TemporalPolyfill.TimeZone = getTemporalInstance()?.TimeZone ?? TimeZoneStub as any
 
@@ -258,23 +307,12 @@ export namespace Temporal {
  *
  * // Use a custom Temporal implementation
  * setTemporal(CustomTemporal);
- * 
+ *
  * const date = Temporal.PlainDate.from('2025-09-19');
  * ```
  */
 export function setTemporal(temporal: typeof TemporalPolyfill): void {
   agapeTemporal = temporal;
-  updateTemporalNamespace();
-}
-
-/**
- * Clears the agape-level temporal instance.
- *
- * After calling this, the Temporal namespace will fall back to checking
- * globalThis for a Temporal implementation.
- */
-function clearAgapeTemporal(): void {
-  agapeTemporal = undefined;
   updateTemporalNamespace();
 }
 
