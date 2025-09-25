@@ -4,12 +4,12 @@ describe('@agape/temporal', () => {
   // Store original globalThis.Temporal
   const originalTemporal = (globalThis as any).Temporal;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset global state
     delete (globalThis as any).Temporal;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Restore original Temporal if it existed
     if (originalTemporal) {
       (globalThis as any).Temporal = originalTemporal;
@@ -23,7 +23,7 @@ describe('@agape/temporal', () => {
       // Clear module cache and re-import
       jest.resetModules();
       const { hasTemporal } = await import('./index');
-      
+
       const mockTemporal = {
         PlainDateTime: {
           from: jest.fn(),
@@ -38,7 +38,7 @@ describe('@agape/temporal', () => {
       // Clear module cache and re-import
       jest.resetModules();
       const { hasTemporal } = await import('./index');
-      
+
       const mockPolyfill = {
         PlainDateTime: {
           from: jest.fn(),
@@ -53,7 +53,7 @@ describe('@agape/temporal', () => {
       // Clear module cache and re-import
       jest.resetModules();
       const { hasTemporal } = await import('./index');
-      
+
       expect(hasTemporal()).toBe(false);
     });
 
@@ -61,7 +61,7 @@ describe('@agape/temporal', () => {
       // Clear module cache and re-import
       jest.resetModules();
       const { hasTemporal } = await import('./index');
-      
+
       const mockTemporal = {
         PlainDateTime: {
           from: jest.fn(),
@@ -71,182 +71,269 @@ describe('@agape/temporal', () => {
 
       // First call should check and cache
       expect(hasTemporal()).toBe(true);
-      
+
       // Second call should use cached result
       expect(hasTemporal()).toBe(true);
     });
   });
 
-  describe('getTemporal', () => {
-    it('should return native Temporal when available', async () => {
+  describe('setTemporal', () => {
+    it('should set agape temporal and allow creating real temporal objects', async () => {
       // Clear module cache and re-import
       jest.resetModules();
-      const { getTemporal } = await import('./index');
       
+      // Create a mock temporal polyfill
       const mockTemporal = {
         PlainDateTime: {
-          from: jest.fn().mockReturnValue({
-            toString: jest.fn().mockReturnValue('2025-09-19T10:00:00'),
-          }),
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `2025-09-19T10:00:00`,
+            year: 2025,
+            month: 9,
+            day: 19,
+            hour: 10,
+            minute: 0,
+            second: 0,
+          })),
+        },
+        PlainDate: {
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `2025-09-19`,
+            year: 2025,
+            month: 9,
+            day: 19,
+          })),
+        },
+        Duration: {
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `PT1H30M`,
+            hours: 1,
+            minutes: 30,
+          })),
+        },
+      };
+
+      const { setTemporal, Temporal, hasTemporal } = await import('./index');
+      setTemporal(mockTemporal as any);
+      
+      expect(hasTemporal()).toBe(true);
+      
+      // Test creating real temporal objects using the namespace
+      const dateTime = Temporal.PlainDateTime.from('2025-09-19T10:00');
+      expect(dateTime.toString()).toBe('2025-09-19T10:00:00');
+      expect(dateTime.year).toBe(2025);
+      expect(dateTime.month).toBe(9);
+      expect(dateTime.day).toBe(19);
+      
+      const date = Temporal.PlainDate.from('2025-09-19');
+      expect(date.toString()).toBe('2025-09-19');
+      expect(date.year).toBe(2025);
+      
+      const duration = Temporal.Duration.from('PT1H30M');
+      expect(duration.toString()).toBe('PT1H30M');
+      expect(duration.hours).toBe(1);
+      expect(duration.minutes).toBe(30);
+    });
+
+    it('should prioritize agape temporal over globalThis', async () => {
+      // Clear module cache and re-import
+      jest.resetModules();
+      
+      const agapeTemporal = {
+        PlainDateTime: {
+          from: jest.fn().mockImplementation(() => ({
+            toString: () => 'agape-temporal-result',
+            source: 'agape',
+          })),
+        },
+      };
+
+      const globalTemporal = {
+        PlainDateTime: {
+          from: jest.fn().mockImplementation(() => ({
+            toString: () => 'global-temporal-result',
+            source: 'global',
+          })),
+        },
+      };
+
+      (globalThis as any).Temporal = globalTemporal;
+      
+      const { setTemporal, Temporal, hasTemporal } = await import('./index');
+      setTemporal(agapeTemporal as any);
+      
+      expect(hasTemporal()).toBe(true);
+      
+      // Should use agape temporal, not global
+      const result = Temporal.PlainDateTime.from('2025-09-19T10:00');
+      expect(result.toString()).toBe('agape-temporal-result');
+      expect((result as any).source).toBe('agape');
+    });
+
+    it('should fall back to globalThis when agape temporal is cleared', async () => {
+      // Clear module cache and re-import
+      jest.resetModules();
+      
+      const agapeTemporal = {
+        PlainDateTime: {
+          from: jest.fn().mockImplementation(() => ({
+            toString: () => 'agape-temporal-result',
+            source: 'agape',
+          })),
+        },
+      };
+
+      const globalTemporal = {
+        PlainDateTime: {
+          from: jest.fn().mockImplementation(() => ({
+            toString: () => 'global-temporal-result',
+            source: 'global',
+          })),
+        },
+      };
+
+      (globalThis as any).Temporal = globalTemporal;
+      
+      const { setTemporal, Temporal, hasTemporal } = await import('./index');
+      setTemporal(agapeTemporal as any);
+      
+      // First should use agape
+      let result = Temporal.PlainDateTime.from('2025-09-19T10:00');
+      expect(result.toString()).toBe('agape-temporal-result');
+      
+      // Clear agape temporal by setting it to undefined
+      setTemporal(undefined as any);
+      
+      expect(hasTemporal()).toBe(true);
+      
+      // Now should use global
+      result = Temporal.PlainDateTime.from('2025-09-19T10:00');
+      expect(result.toString()).toBe('global-temporal-result');
+      expect((result as any).source).toBe('global');
+    });
+
+    it('should use stubs when no temporal is available', async () => {
+      // Clear module cache and re-import
+      jest.resetModules();
+      const { Temporal, hasTemporal } = await import('./index');
+
+      expect(hasTemporal()).toBe(false);
+      expect(Temporal.PlainDateTime).toBeDefined();
+      expect(typeof Temporal.PlainDateTime).toBe('function');
+      
+      // Should throw error when trying to create objects
+      expect(() => {
+        Temporal.PlainDateTime.from('2025-09-19T10:00');
+      }).toThrow('Temporal required. Use a JavaScript runtime which has Temporal or use a polyfill such as @js-temporal/polyfill or temporal-polyfill.');
+    });
+  });
+
+  describe('Temporal namespace with globalThis polyfill', () => {
+    it('should work with native Temporal on globalThis', async () => {
+      // Clear module cache and re-import
+      jest.resetModules();
+      
+      // Set up a mock temporal polyfill on globalThis
+      const mockTemporal = {
+        PlainDateTime: {
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `2025-09-19T10:00:00`,
+            year: 2025,
+            month: 9,
+            day: 19,
+            hour: 10,
+            minute: 0,
+            second: 0,
+          })),
+        },
+        PlainDate: {
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `2025-09-19`,
+            year: 2025,
+            month: 9,
+            day: 19,
+          })),
+        },
+        Duration: {
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `PT2H45M`,
+            hours: 2,
+            minutes: 45,
+          })),
         },
       };
       (globalThis as any).Temporal = mockTemporal;
 
-      const temporal = getTemporal();
-      expect(temporal).toBe(mockTemporal);
-      expect(temporal.PlainDateTime.from).toBeDefined();
+      const { Temporal, hasTemporal } = await import('./index');
+
+      expect(hasTemporal()).toBe(true);
+      
+      // Test creating real temporal objects using the namespace
+      const dateTime = Temporal.PlainDateTime.from('2025-09-19T10:00');
+      expect(dateTime.toString()).toBe('2025-09-19T10:00:00');
+      expect(dateTime.year).toBe(2025);
+      expect(dateTime.month).toBe(9);
+      expect(dateTime.day).toBe(19);
+      
+      const date = Temporal.PlainDate.from('2025-09-19');
+      expect(date.toString()).toBe('2025-09-19');
+      expect(date.year).toBe(2025);
+      
+      const duration = Temporal.Duration.from('PT2H45M');
+      expect(duration.toString()).toBe('PT2H45M');
+      expect(duration.hours).toBe(2);
+      expect(duration.minutes).toBe(45);
     });
 
-    it('should return polyfill Temporal when available on globalThis', async () => {
+    it('should work with polyfill Temporal on globalThis', async () => {
       // Clear module cache and re-import
       jest.resetModules();
-      const { getTemporal } = await import('./index');
       
+      // Set up a mock polyfill on globalThis
       const mockPolyfill = {
         PlainDateTime: {
-          from: jest.fn().mockReturnValue({
-            toString: jest.fn().mockReturnValue('2025-09-19T10:00:00'),
-          }),
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `polyfill-${value}`,
+            source: 'polyfill',
+          })),
+        },
+        PlainDate: {
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `polyfill-date-${value}`,
+            source: 'polyfill',
+          })),
+        },
+        Duration: {
+          from: jest.fn().mockImplementation((value: string) => ({
+            toString: () => `polyfill-duration-${value}`,
+            source: 'polyfill',
+          })),
         },
       };
       (globalThis as any).Temporal = mockPolyfill;
 
-      const temporal = getTemporal();
-      expect(temporal).toBe(mockPolyfill);
-      expect(temporal.PlainDateTime.from).toBeDefined();
-    });
+      const { Temporal, hasTemporal } = await import('./index');
 
-    it('should return cached Temporal on subsequent calls', async () => {
-      // Clear module cache and re-import
-      jest.resetModules();
-      const { getTemporal } = await import('./index');
+      expect(hasTemporal()).toBe(true);
       
-      const mockTemporal = {
-        PlainDateTime: {
-          from: jest.fn(),
-        },
-      };
-      (globalThis as any).Temporal = mockTemporal;
-
-      const temporal1 = getTemporal();
-      const temporal2 = getTemporal();
+      // Test creating real temporal objects using the namespace
+      const dateTime = Temporal.PlainDateTime.from('2025-09-19T10:00');
+      expect(dateTime.toString()).toBe('polyfill-2025-09-19T10:00');
+      expect((dateTime as any).source).toBe('polyfill');
       
-      expect(temporal1).toBe(temporal2);
-      expect(temporal1).toBe(mockTemporal);
-    });
-
-    it('should return typed stub when Temporal is not available', async () => {
-      // Clear module cache and re-import
-      jest.resetModules();
-      const { getTemporal } = await import('./index');
+      const date = Temporal.PlainDate.from('2025-09-19');
+      expect(date.toString()).toBe('polyfill-date-2025-09-19');
+      expect((date as any).source).toBe('polyfill');
       
-      const temporal = getTemporal();
-      expect(temporal).toBeDefined();
-      expect(typeof temporal).toBe('object');
-    });
-
-    it('should throw descriptive error when accessing stub properties', async () => {
-      // Clear module cache and re-import
-      jest.resetModules();
-      const { getTemporal } = await import('./index');
-      
-      const temporal = getTemporal();
-      
-      expect(() => {
-        (temporal as any).PlainDateTime;
-      }).toThrow('Temporal is not available (accessed property: PlainDateTime). Install @js-temporal/polyfill or use Node 20+/modern browsers.');
-    });
-
-    it('should throw descriptive error when accessing nested stub properties', async () => {
-      // Clear module cache and re-import
-      jest.resetModules();
-      const { getTemporal } = await import('./index');
-      
-      const temporal = getTemporal();
-      
-      expect(() => {
-        (temporal as any).PlainDateTime.from;
-      }).toThrow('Temporal is not available (accessed property: PlainDateTime). Install @js-temporal/polyfill or use Node 20+/modern browsers.');
-    });
-
-    it('should work with different property names', async () => {
-      // Clear module cache and re-import
-      jest.resetModules();
-      const { getTemporal } = await import('./index');
-      
-      const temporal = getTemporal();
-      
-      expect(() => {
-        (temporal as any).Now;
-      }).toThrow('Temporal is not available (accessed property: Now). Install @js-temporal/polyfill or use Node 20+/modern browsers.');
+      const duration = Temporal.Duration.from('PT1H30M');
+      expect(duration.toString()).toBe('polyfill-duration-PT1H30M');
+      expect((duration as any).source).toBe('polyfill');
     });
   });
-
-  describe('TemporalLike type', () => {
-    it('should be compatible with native Temporal', async () => {
-      // Clear module cache and re-import
-      jest.resetModules();
-      const { getTemporal } = await import('./index');
-      
-      const mockTemporal = {
-        PlainDateTime: {
-          from: jest.fn(),
-        },
-        PlainDate: {
-          from: jest.fn(),
-        },
-        PlainTime: {
-          from: jest.fn(),
-        },
-        Now: {
-          plainDateTime: jest.fn(),
-        },
-      };
-      (globalThis as any).Temporal = mockTemporal;
-
-      const temporal = getTemporal();
-      expect(temporal).toBeDefined();
-      expect(temporal.PlainDateTime).toBeDefined();
-      expect(temporal.PlainDate).toBeDefined();
-      expect(temporal.PlainTime).toBeDefined();
-      expect(temporal.Now).toBeDefined();
-    });
-
-    it('should be compatible with polyfill Temporal', async () => {
-      // Clear module cache and re-import
-      jest.resetModules();
-      const { getTemporal } = await import('./index');
-      
-      const mockPolyfill = {
-        PlainDateTime: {
-          from: jest.fn(),
-        },
-        PlainDate: {
-          from: jest.fn(),
-        },
-        PlainTime: {
-          from: jest.fn(),
-        },
-        Now: {
-          plainDateTime: jest.fn(),
-        },
-      };
-      (globalThis as any).Temporal = mockPolyfill;
-
-      const temporal = getTemporal();
-      expect(temporal).toBeDefined();
-      expect(temporal.PlainDateTime).toBeDefined();
-      expect(temporal.PlainDate).toBeDefined();
-      expect(temporal.PlainTime).toBeDefined();
-      expect(temporal.Now).toBeDefined();
-    });
-  });
-
+  
   describe('integration scenarios', () => {
     it('should handle the example usage from documentation', async () => {
       // Clear module cache and re-import
       jest.resetModules();
-      const { getTemporal, hasTemporal } = await import('./index');
       
       const mockTemporal = {
         PlainDateTime: {
@@ -257,8 +344,9 @@ describe('@agape/temporal', () => {
       };
       (globalThis as any).Temporal = mockTemporal;
 
+      const { Temporal, hasTemporal } = await import('./index');
+
       if (hasTemporal()) {
-        const Temporal = getTemporal();
         const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
         expect(now.toString()).toBe('2025-09-19T10:00:00');
       } else {
@@ -270,7 +358,7 @@ describe('@agape/temporal', () => {
       // Clear module cache and re-import
       jest.resetModules();
       const { hasTemporal } = await import('./index');
-      
+
       if (hasTemporal()) {
         throw new Error('Expected Temporal to not be available');
       } else {
@@ -284,8 +372,8 @@ describe('@agape/temporal', () => {
     it('should work in decorator context (synchronous)', async () => {
       // Clear module cache and re-import
       jest.resetModules();
-      const { getTemporal } = await import('./index');
-      
+      const { Temporal } = await import('./index');
+
       const mockTemporal = {
         PlainDateTime: {
           from: jest.fn(),
@@ -295,41 +383,38 @@ describe('@agape/temporal', () => {
 
       // Simulate decorator usage - must be synchronous
       function temporalDecorator() {
-        const temporal = getTemporal();
-        return function(target: any, propertyKey: string) {
+        return function() {
           // Decorator logic here
-          expect(temporal).toBeDefined();
+          expect(Temporal).toBeDefined();
         };
       }
 
-      class TestClass {
-        @temporalDecorator()
-        testProperty: string = 'test';
-      }
-
-      expect(new TestClass()).toBeDefined();
+      // Test that the decorator function works
+      const decorator = temporalDecorator();
+      expect(typeof decorator).toBe('function');
+      
+      // Test that Temporal is available synchronously
+      expect(Temporal).toBeDefined();
     });
   });
 
   describe('error handling', () => {
-    it('should handle stub access with different property names', async () => {
+    it('should throw error when trying to instantiate stub classes', async () => {
       // Clear module cache and re-import
       jest.resetModules();
-      const { getTemporal } = await import('./index');
-      
-      const temporal = getTemporal();
-      
+      const { Temporal } = await import('./index');
+
       expect(() => {
-        (temporal as any).PlainDateTime;
-      }).toThrow('Temporal is not available (accessed property: PlainDateTime). Install @js-temporal/polyfill or use Node 20+/modern browsers.');
-      
+        new (Temporal as any).PlainDateTime();
+      }).toThrow('Temporal required. Use a JavaScript runtime which has Temporal or use a polyfill such as @js-temporal/polyfill or temporal-polyfill.');
+
       expect(() => {
-        (temporal as any).Now;
-      }).toThrow('Temporal is not available (accessed property: Now). Install @js-temporal/polyfill or use Node 20+/modern browsers.');
-      
+        new (Temporal as any).Duration();
+      }).toThrow('Temporal required. Use a JavaScript runtime which has Temporal or use a polyfill such as @js-temporal/polyfill or temporal-polyfill.');
+
       expect(() => {
-        (temporal as any).Duration;
-      }).toThrow('Temporal is not available (accessed property: Duration). Install @js-temporal/polyfill or use Node 20+/modern browsers.');
+        new (Temporal as any).TimeZone();
+      }).toThrow('Temporal required. Use a JavaScript runtime which has Temporal or use a polyfill such as @js-temporal/polyfill or temporal-polyfill.');
     });
   });
 });

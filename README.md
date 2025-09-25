@@ -1,40 +1,66 @@
 # @agape/temporal
 
-A stand-in for Temporal that lets you program for systems with or without Temporal support.
+Access the Temporal namespace safely, even in environments where it's not natively available.
 
-## ✨ Functions
+@agape/temporal provides a drop-in mechanism for working with Temporal objects 
+without requiring the native Temporal API to be installed. If Temporal is 
+unavailable, this library provides stub implementations that raise clear runtime
+errors, allowing your code to fail gracefully or fall back to alternatives.
 
-### `hasTemporal(): boolean`
-Check if Temporal is available in the current environment.
-
-### `getTemporal(): TemporalLike`
-Get the Temporal object. Returns real Temporal if available, typed stub if not.
-
-### `TemporalLike`
-Type alias for the complete Temporal namespace. Use for type annotations.
-
----
-
-## 🚀 Example
+## 🚀 Get Started
 
 ```typescript
-import { getTemporal, hasTemporal } from '@agape/temporal';
+import { Temporal, hasTemporal, setTemporal } from '@agape/temporal';
 
+// Always works - checks for Temporal availability
 if (hasTemporal()) {
-  const Temporal = getTemporal();
   const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
-  console.log(now.toString());
+  console.log(now.toString()); // "2025-09-19T10:00:00"
 } else {
-  console.warn('Temporal not available, using Date fallback');
-  const fallback = new Date();
+  console.log('Temporal not available, using fallback');
 }
 ```
 
-## Environment Support
+### With Polyfill
 
-- **Native Temporal**: Node.js 20+, Chrome 84+, Firefox 95+, Safari 15.4+
-- **Polyfill**: Works with any configured polyfill
-- **Fallback**: Typed stub with helpful error messages
+If the native Temporal exists, or  polyfill has been set on the `globalThis`, that
+will be the implementation used.
+
+```typescript
+import { Temporal as TemporalPolyfill } from '@js-temporal/polyfill';
+(globalThis as any)['Temporal'] = TemporalPolyfill;
+
+import { Temporal } from '@agape/temporal';
+
+// Temporal just works
+const date = Temporal.PlainDate.from('2025-09-19');
+const duration = Temporal.Duration.from('PT1H30M');
+```
+
+### With Agape Configuration
+
+You can configure which implementation Agape uses.
+
+```typescript
+import { Temporal as TemporalPolyfill } from '@js-temporal/polyfill';
+import { setTemporal, Temporal } from '@agape/temporal';
+
+setTemporal(TemporalPolyfill);
+
+const date = Temporal.PlainDate.from('2025-09-19');
+const duration = Temporal.Duration.from('PT1H30M');
+```
+
+## 📖 API
+
+### `Temporal` Namespace
+Use the full Temporal API - `Temporal.PlainDateTime`, `Temporal.PlainDate`, `Temporal.Duration`, etc. Works with real Temporal or provides helpful error stubs.
+
+### `hasTemporal(): boolean`
+Check if Temporal is available before using it.
+
+### `setTemporal(temporal): void`
+Configure your preferred Temporal implementation (polyfill, custom, etc.).
 
 
 ---
