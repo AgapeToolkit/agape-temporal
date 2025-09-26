@@ -7,7 +7,7 @@
  *
  * @example
  *
- * # Produce an Error if no Temporal available
+ * ### Produce an Error if no Temporal available
  *
  * ```typescript
  * import { Temporal } from '@agape/temporal';
@@ -21,10 +21,9 @@
  *   }
  * }
  * ```
- *
- * # Resolve Error Using a Polyfill
- *
  * @example
+ * ### Resolve Error Using a Polyfill
+ *
  * ```typescript
  * // Using a polyfill to resolve the error
  * import { Temporal as TemporalPolyfill } from '@js-temporal/polyfill';

@@ -97,10 +97,15 @@ class TimeZoneStub {
  * ### Throw an Error if it's not
  *
  * ```typescript
- * import { Temporal } from '@agape/temporal';
+ * import { Temporal, TemporalNotAvailableError } from '@agape/temporal';
  *
- * const pdt = Temporal.PlainDateTime.from('2025-09-19T10:00');
- * // throws an error if temporal
+ * try {
+ *   const date = Temporal.PlainDate.from('2025-09-19');
+ * } catch (error) {
+ *   if (error instanceof TemporalNotAvailableError) {
+ *     console.error('Temporal is not available:', error.message);
+ *   }
+ * }
  * ```
  *
  * @example
@@ -213,8 +218,7 @@ export namespace Temporal {
  *
  * This function allows you to explicitly configure which Temporal implementation
  * should be used. The provided temporal takes precedence over any Temporal found
- * on globalThis, giving you full control over the Temporal implementation used
- * throughout your application.
+ * on globalThis.
  *
  * @param temporal - The Temporal implementation to use (e.g., from `@js-temporal/polyfill`)
  *
@@ -229,17 +233,6 @@ export namespace Temporal {
  * // Now all Temporal namespace usage will use this implementation
  * const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
  * console.log(now.toString()); // Uses your polyfill
- * ```
- *
- * @example
- * ```typescript
- * import { setTemporal, Temporal } from '@agape/temporal';
- * import { Temporal as CustomTemporal } from './my-custom-temporal';
- *
- * // Use a custom Temporal implementation
- * setTemporal(CustomTemporal);
- *
- * const date = Temporal.PlainDate.from('2025-09-19');
  * ```
  */
 export function setTemporal(temporal: typeof TemporalPolyfill): void {
@@ -271,7 +264,7 @@ function updateTemporalNamespace(): void {
  * Checks if Temporal is available in the current environment.
  *
  * This function checks for Temporal implementations in the following priority order:
- * 1. Agape-level temporal (set via `setTemporal()`)
+ * 1. Agape-level temporal (set via <code><reference>setTemporal</reference>()</code>)
  * 2. GlobalThis temporal (native or polyfill)
  *
  * @returns `true` if Temporal is available, `false` otherwise
