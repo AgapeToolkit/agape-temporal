@@ -5,7 +5,7 @@ Access the Temporal namespace safely, even in environments where it's not native
 @agape/temporal provides a drop-in mechanism for working with Temporal objects 
 without requiring the native Temporal API to be installed. If Temporal is 
 unavailable, this library provides stub implementations that raise clear runtime
-errors, allowing your code to fail gracefully or fall back to alternatives.
+errors (`TemporalNotAvailableError`), allowing your code to fail gracefully or fall back to alternatives.
 
 ## 🚀 Get Started
 
@@ -62,6 +62,26 @@ Check if Temporal is available before using it.
 ### `setTemporal(temporal): void`
 Configure your preferred Temporal implementation (polyfill, custom, etc.).
 
+## ⚠️ Error Handling
+
+When Temporal is not available, the library throws `TemporalNotAvailableError` with helpful guidance:
+
+```typescript
+import { Temporal, TemporalNotAvailableError } from '@agape/temporal';
+
+try {
+  const date = Temporal.PlainDate.from('2025-09-19');
+} catch (error) {
+  if (error instanceof TemporalNotAvailableError) {
+    console.error('Temporal not available:', error.message);
+    // Handle gracefully or use fallback
+  }
+}
+```
+
+The error message includes guidance on resolving the issue:
+- Use a JavaScript runtime with native Temporal support
+- Install a polyfill like `@js-temporal/polyfill`
 
 ---
 
