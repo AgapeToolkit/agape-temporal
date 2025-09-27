@@ -1,6 +1,6 @@
 {
   "name": "@agape/temporal",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Temporal namespace",
   "main": "./cjs/index.js",
   "module": "./es2020/index.js",
@@ -16,6 +16,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/AgapeToolkit/AgapeToolkit"
+  },
+  "dependencies": {
+    "@js-temporal/polyfill": "^0.4.4"
   },
   "keywords": [
     "agape",

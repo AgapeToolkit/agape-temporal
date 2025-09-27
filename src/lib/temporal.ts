@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Temporal as TemporalPolyfill } from "@js-temporal/polyfill";
+import type { Temporal as TemporalImplementation } from "@js-temporal/polyfill";
 import { TemporalNotAvailableError } from './errors';
 
-let agapeTemporal: typeof TemporalPolyfill | undefined;
+let agapeTemporal: typeof TemporalImplementation | undefined;
 
-const installedTemporal: typeof TemporalPolyfill = (globalThis as any)?.Temporal;
+const installedTemporal: typeof TemporalImplementation = (globalThis as any)?.Temporal;
 
 // Get the temporal instance to use (agape first, then globalThis)
-function getTemporalInstance(): typeof TemporalPolyfill | undefined {
+function getTemporalInstance(): typeof TemporalImplementation | undefined {
   return agapeTemporal ?? (globalThis as any)?.Temporal;
 }
 
@@ -134,82 +134,82 @@ export namespace Temporal {
    * `Temporal.Instant` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/instant.html | The Temporal.Instant documentation}
    */
-  export const Instant: typeof TemporalPolyfill.Instant = getTemporalInstance()?.Instant ?? InstantStub as any
+  export const Instant: typeof TemporalImplementation.Instant = getTemporalInstance()?.Instant ?? InstantStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.Instant`
-  export type Instant = TemporalPolyfill.Instant;
+  export type Instant = TemporalImplementation.Instant;
 
   /**
    * `Temporal.ZonedDateTime` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/zoneddatetime.html  | The Temporal.ZonedDateTime documentation}
    */
-  export const ZonedDateTime: typeof TemporalPolyfill.ZonedDateTime = getTemporalInstance()?.ZonedDateTime ?? ZonedDateTimeStub as any
+  export const ZonedDateTime: typeof TemporalImplementation.ZonedDateTime = getTemporalInstance()?.ZonedDateTime ?? ZonedDateTimeStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.ZonedDateTime`
-  export type ZonedDateTime = TemporalPolyfill.ZonedDateTime;
+  export type ZonedDateTime = TemporalImplementation.ZonedDateTime;
 
   /**
    * `Temporal.PlainDate` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/plaindate.html  | The Temporal.PlainDate documentation}
    */
-  export const PlainDate: typeof TemporalPolyfill.PlainDate = getTemporalInstance()?.PlainDate ?? PlainDateStub as any
+  export const PlainDate: typeof TemporalImplementation.PlainDate = getTemporalInstance()?.PlainDate ?? PlainDateStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.PlainDate`
-  export type PlainDate = TemporalPolyfill.PlainDate;
+  export type PlainDate = TemporalImplementation.PlainDate;
 
   /**
    * `Temporal.PlainTime` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/plaintime.html | The Temporal.PlainTime documentation}
    */
-  export const PlainTime: typeof TemporalPolyfill.PlainTime = getTemporalInstance()?.PlainTime ?? PlainTimeStub as any
+  export const PlainTime: typeof TemporalImplementation.PlainTime = getTemporalInstance()?.PlainTime ?? PlainTimeStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.PlainTime`
-  export type PlainTime = TemporalPolyfill.PlainTime;
+  export type PlainTime = TemporalImplementation.PlainTime;
 
   /**
    * `Temporal.PlainDateTime` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/plaindatetime.html | The Temporal.PlainDateTime documentation}
    */
-  export const PlainDateTime: typeof TemporalPolyfill.PlainDateTime = getTemporalInstance()?.PlainDateTime ?? PlainDateTimeStub as any
+  export const PlainDateTime: typeof TemporalImplementation.PlainDateTime = getTemporalInstance()?.PlainDateTime ?? PlainDateTimeStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.PlainDateTime`
-  export type PlainDateTime = TemporalPolyfill.PlainDateTime;
+  export type PlainDateTime = TemporalImplementation.PlainDateTime;
 
   /**
    * `Temporal.PlainYearMonth` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/plainyearmonth.html | The Temporal.PlainYearMonth documentation}
    */
-  export const PlainYearMonth: typeof TemporalPolyfill.PlainYearMonth = getTemporalInstance()?.PlainYearMonth ?? PlainYearMonthStub as any
+  export const PlainYearMonth: typeof TemporalImplementation.PlainYearMonth = getTemporalInstance()?.PlainYearMonth ?? PlainYearMonthStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.PlainYearMonth`
-  export type PlainYearMonth = TemporalPolyfill.PlainYearMonth;
+  export type PlainYearMonth = TemporalImplementation.PlainYearMonth;
 
   /**
    * `Temporal.PlainMonthDay` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/plainmonthday.html | The Temporal.PlainMonthDay documentation}
    */
-  export const PlainMonthDay: typeof TemporalPolyfill.PlainMonthDay = getTemporalInstance()?.PlainMonthDay ?? PlainMonthDayStub as any
+  export const PlainMonthDay: typeof TemporalImplementation.PlainMonthDay = getTemporalInstance()?.PlainMonthDay ?? PlainMonthDayStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.PlainMonthDay`
-  export type PlainMonthDay = TemporalPolyfill.PlainMonthDay;
+  export type PlainMonthDay = TemporalImplementation.PlainMonthDay;
 
   /**
    * `Temporal.Duration` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/duration.html | The Temporal.Duration documentation}
    */
-  export const Duration: typeof TemporalPolyfill.Duration = getTemporalInstance()?.Duration ?? DurationStub as any
+  export const Duration: typeof TemporalImplementation.Duration = getTemporalInstance()?.Duration ?? DurationStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.Duration`
-  export type Duration = TemporalPolyfill.Duration;
+  export type Duration = TemporalImplementation.Duration;
 
   /**
    * `Temporal.TimeZone` constructor or noop implementation.
    * @see {@link https://tc39.es/proposal-temporal/docs/timezone.html | The Temporal.TimeZone documentation}
    */
-  export const TimeZone: typeof TemporalPolyfill.TimeZone = getTemporalInstance()?.TimeZone ?? TimeZoneStub as any
+  export const TimeZone: typeof TemporalImplementation.TimeZone = getTemporalInstance()?.TimeZone ?? TimeZoneStub as any
 
   // 👇 This defines the type for usage like `TemporalStub.TimeZone`
-  export type TimeZone = TemporalPolyfill.TimeZone;
+  export type TimeZone = TemporalImplementation.TimeZone;
 }
 
 
@@ -235,7 +235,7 @@ export namespace Temporal {
  * console.log(now.toString()); // Uses your polyfill
  * ```
  */
-export function setTemporal(temporal: typeof TemporalPolyfill): void {
+export function setTemporal(temporal: typeof TemporalImplementation): void {
   agapeTemporal = temporal;
   updateTemporalNamespace();
 }
