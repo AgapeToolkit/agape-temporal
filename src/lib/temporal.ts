@@ -220,7 +220,8 @@ export namespace Temporal {
  * should be used. The provided temporal takes precedence over any Temporal found
  * on globalThis.
  *
- * @param temporal - The Temporal implementation to use (e.g., from `@js-temporal/polyfill`)
+ * @param temporal - The Temporal implementation to use (e.g., from `@js-temporal/polyfill`), 
+ *                   or null/undefined to reset to noop stubs
  *
  * @example
  * ```typescript
@@ -233,10 +234,13 @@ export namespace Temporal {
  * // Now all Temporal namespace usage will use this implementation
  * const now = Temporal.PlainDateTime.from('2025-09-19T10:00');
  * console.log(now.toString()); // Uses your polyfill
+ *
+ * // Reset to noop stubs
+ * setTemporal(null);
  * ```
  */
-export function setTemporal(temporal: typeof TemporalImplementation): void {
-  agapeTemporal = temporal;
+export function setTemporal(temporal: typeof TemporalImplementation | null | undefined): void {
+  agapeTemporal = temporal || undefined;
   updateTemporalNamespace();
 }
 
